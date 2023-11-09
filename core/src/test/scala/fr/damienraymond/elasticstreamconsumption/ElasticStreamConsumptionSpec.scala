@@ -4,6 +4,8 @@ import zio.stream.ZStream
 import zio.test.{Spec, TestClock, TestEnvironment, ZIOSpecDefault, assertTrue}
 import zio.{Queue, Ref, Scope, ULayer, ZIO, ZLayer, durationInt}
 
+import scala.collection.SortedSet
+
 object ElasticStreamConsumptionSpec extends ZIOSpecDefault {
 
   def createObservableStreams: ZIO[
@@ -117,9 +119,10 @@ object ElasticStreamConsumptionSpec extends ZIOSpecDefault {
 
   def createCluster(
       changes: Queue[List[String]]
-  ): ZLayer[Any, Nothing, IpsChangesWatcher] = ZLayer.succeed(new IpsChangesWatcher {
-    override def watchIpsChanges
-        : ZIO[Any, Throwable, ZStream[Any, Throwable, List[String]]] =
-      ZIO.succeed(ZStream.fromQueue(changes))
-  })
+  ): ZLayer[Any, Nothing, IpsChangesWatcher] =
+    ZLayer.succeed(new IpsChangesWatcher {
+      override def watchIpsChanges
+          : ZIO[Any, Throwable, ZStream[Any, Throwable, SortedSet[String]]] =
+        ZIO.succeed(ZStream.fromQueue(changes).map(_.to(SortedSet)))
+    })
 }
